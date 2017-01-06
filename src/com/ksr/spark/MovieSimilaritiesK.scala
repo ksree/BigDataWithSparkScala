@@ -84,7 +84,21 @@ object  MovieSimilaritiesK {
     val moviePairs = uniqueJoinedPairs.map(makePairs)
     val movieRatingPair = moviePairs.groupByKey()
     val moviePairSimilarities = movieRatingPair.mapValues(computeCosineSimilarity).cache()
-    val sorted = moviePairSimilarities
+    if(args.length >0 ){
+      val scoreThreshold = 0.97
+      val coOccuranceThreshold = 50.0
+
+      val movieID: Int = args(0).trim.toInt
+
+      val filteredResult = moviePairSimilarities.filter{x =>  (x._1._1 == movieID || x._1._2 == movieID) && x._2._1 > scoreThreshold && x._2._2 > coOccuranceThreshold }
+
+      val result = filteredResult.map(x => (x._2, x._1)).sortByKey(false).take(10)
+
+      println("Top 10 movies similar to movie " + loadMovieNames().get(movieID))
+      for(x <- result){
+        println(loadMovieNames().get(x._2._1).getOrElse("No Match Found"))
+      }
+    }
 
   }
 }
